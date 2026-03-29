@@ -80,9 +80,10 @@ resource "aws_security_group" "app_sg" {
 }
 
 resource "aws_instance" "app_server" {
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = var.instance_type
-  key_name      = var.key_pair_name
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = var.instance_type
+  key_name                    = var.key_pair_name
+  user_data_replace_on_change = true
 
   vpc_security_group_ids = [aws_security_group.app_sg.id]
 
