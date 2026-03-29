@@ -1,0 +1,5 @@
+# Copy this file to terraform.tfvars and fill in your values
+aws_region    = "us-east-1"
+instance_name = "vcc-scaled-instance"
+instance_type = "t2.medium"
+key_pair_name = "vcc-key"

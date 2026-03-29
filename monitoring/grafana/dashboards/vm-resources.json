@@ -1,0 +1,173 @@
+{
+    "annotations": { "list": [] },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+    {
+    "title": "CPU Usage (%)",
+    "type": "gauge",
+    "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+    "datasource": { "type": "prometheus", "uid": "prometheus" },
+    "targets": [
+    {
+    "expr": "100 - (avg(irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+    "legendFormat": "CPU %"
+    }
+    ],
+    "fieldConfig": {
+    "defaults": {
+    "thresholds": {
+    "mode": "absolute",
+    "steps": [
+    { "color": "green", "value": null },
+    { "color": "yellow", "value": 50 },
+    { "color": "red", "value": 75 }
+    ]
+    },
+    "max": 100,
+    "min": 0,
+    "unit": "percent"
+    }
+    }
+    },
+    {
+    "title": "Memory Usage (%)",
+    "type": "gauge",
+    "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+    "datasource": { "type": "prometheus", "uid": "prometheus" },
+    "targets": [
+    {
+    "expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100",
+    "legendFormat": "Memory %"
+    }
+    ],
+    "fieldConfig": {
+    "defaults": {
+    "thresholds": {
+    "mode": "absolute",
+    "steps": [
+    { "color": "green", "value": null },
+    { "color": "yellow", "value": 50 },
+    { "color": "red", "value": 75 }
+    ]
+    },
+    "max": 100,
+    "min": 0,
+    "unit": "percent"
+    }
+    }
+    },
+    {
+    "title": "Disk Usage (%)",
+    "type": "gauge",
+    "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+    "datasource": { "type": "prometheus", "uid": "prometheus" },
+    "targets": [
+    {
+    "expr": "(1 - node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"}) * 100",
+    "legendFormat": "Disk %"
+    }
+    ],
+    "fieldConfig": {
+    "defaults": {
+    "thresholds": {
+    "mode": "absolute",
+    "steps": [
+    { "color": "green", "value": null },
+    { "color": "yellow", "value": 50 },
+    { "color": "red", "value": 75 }
+    ]
+    },
+    "max": 100,
+    "min": 0,
+    "unit": "percent"
+    }
+    }
+    },
+    {
+    "title": "CPU Usage Over Time",
+    "type": "timeseries",
+    "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+    "datasource": { "type": "prometheus", "uid": "prometheus" },
+    "targets": [
+    {
+    "expr": "100 - (avg(irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+    "legendFormat": "CPU %"
+    }
+    ],
+    "fieldConfig": {
+    "defaults": {
+    "custom": { "lineWidth": 2, "fillOpacity": 20 },
+    "thresholds": {
+    "mode": "absolute",
+    "steps": [
+    { "color": "green", "value": null },
+    { "color": "red", "value": 75 }
+    ]
+    },
+    "max": 100,
+    "min": 0,
+    "unit": "percent"
+    }
+    }
+    },
+    {
+    "title": "Memory Usage Over Time",
+    "type": "timeseries",
+    "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+    "datasource": { "type": "prometheus", "uid": "prometheus" },
+    "targets": [
+    {
+    "expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100",
+    "legendFormat": "Memory %"
+    }
+    ],
+    "fieldConfig": {
+    "defaults": {
+    "custom": { "lineWidth": 2, "fillOpacity": 20 },
+    "thresholds": {
+    "mode": "absolute",
+    "steps": [
+    { "color": "green", "value": null },
+    { "color": "red", "value": 75 }
+    ]
+    },
+    "max": 100,
+    "min": 0,
+    "unit": "percent"
+    }
+    }
+    },
+    {
+    "title": "Auto-Scale Threshold (75%)",
+    "type": "stat",
+    "gridPos": { "h": 4, "w": 24, "x": 0, "y": 16 },
+    "datasource": { "type": "prometheus", "uid": "prometheus" },
+    "targets": [
+    {
+    "expr": "100 - (avg(irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100) > 75",
+    "legendFormat": "Scale Trigger"
+    }
+    ],
+    "fieldConfig": {
+    "defaults": {
+    "mappings": [
+    { "type": "value", "options": { "0": { "text": "NORMAL - No Scaling Needed", "color": "green" } } },
+    { "type": "value", "options": { "1": { "text": "ALERT - Auto-Scaling Triggered!", "color": "red" } } }
+    ]
+    }
+    }
+    }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 38,
+    "tags": ["vcc", "auto-scaling"],
+    "templating": { "list": [] },
+    "time": { "from": "now-30m", "to": "now" },
+    "title": "VCC Auto-Scaling Monitor",
+    "uid": "vcc-autoscale-dashboard"
+    }
