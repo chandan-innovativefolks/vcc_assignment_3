@@ -1,15 +1,16 @@
 #!/bin/bash
 set -e
 
-echo "=== Updating system packages ==="
+export DEBIAN_FRONTEND=noninteractive
+
+echo "=== Updating package index ==="
 sudo apt-get update -y
-sudo apt-get upgrade -y
 
 echo "=== Installing core dependencies ==="
-sudo apt-get install -y \
-    python3 python3-pip python3-venv \
+sudo -E apt-get install -y \
+    python3 python3-pip python3-venv python3-setuptools \
     curl wget git jq stress-ng unzip \
-    apt-transport-https ca-certificates gnupg
+    apt-transport-https ca-certificates gnupg lsb-release
 
 echo "=== Installing Docker ==="
 curl -fsSL https://get.docker.com | sudo sh
@@ -21,18 +22,27 @@ sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-
 sudo chmod +x /usr/local/bin/docker-compose
 
 echo "=== Setting up Python environment ==="
+rm -rf /home/vagrant/venv
+python3 -m venv /home/vagrant/venv
+source /home/vagrant/venv/bin/activate
 cd /vagrant
-python3 -m venv venv
-source venv/bin/activate
 pip install --upgrade pip
 pip install -r app/requirements.txt
 
 echo "=== Installing Node Exporter ==="
 NODE_EXPORTER_VERSION="1.7.0"
-wget -q "https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz"
-tar xzf "node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz"
-sudo cp "node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64/node_exporter" /usr/local/bin/
-rm -rf "node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64"*
+ARCH="$(uname -m)"
+
+if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+    NODE_EXPORTER_ARCH="arm64"
+else
+    NODE_EXPORTER_ARCH="amd64"
+fi
+
+wget -q "https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-${NODE_EXPORTER_ARCH}.tar.gz"
+tar xzf "node_exporter-${NODE_EXPORTER_VERSION}.linux-${NODE_EXPORTER_ARCH}.tar.gz"
+sudo cp "node_exporter-${NODE_EXPORTER_VERSION}.linux-${NODE_EXPORTER_ARCH}/node_exporter" /usr/local/bin/
+rm -rf "node_exporter-${NODE_EXPORTER_VERSION}.linux-${NODE_EXPORTER_ARCH}"*
 
 sudo tee /etc/systemd/system/node_exporter.service > /dev/null <<'UNIT'
 [Unit]
@@ -52,7 +62,14 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now node_exporter
 
 echo "=== Installing AWS CLI v2 ==="
-curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+ARCH="$(uname -m)"
+if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+    AWSCLI_URL="https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip"
+else
+    AWSCLI_URL="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+fi
+
+curl -fsSL "$AWSCLI_URL" -o "/tmp/awscliv2.zip"
 unzip -qo /tmp/awscliv2.zip -d /tmp
 sudo /tmp/aws/install --update
 rm -rf /tmp/aws /tmp/awscliv2.zip
@@ -62,11 +79,15 @@ wget -qO- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/sh
 echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
     sudo tee /etc/apt/sources.list.d/hashicorp.list
 sudo apt-get update -y
-sudo apt-get install -y terraform
+sudo -E apt-get install -y terraform
 
 echo "=== Setting up monitoring stack via Docker Compose ==="
 cd /vagrant
-sudo docker-compose -f docker-compose.monitoring.yml up -d
+if docker compose version >/dev/null 2>&1; then
+    sudo docker compose -f docker-compose.monitoring.yml up -d
+else
+    sudo docker-compose -f docker-compose.monitoring.yml up -d
+fi
 
 echo "=== Provisioning complete ==="
 echo "Flask App:     http://localhost:5000"
