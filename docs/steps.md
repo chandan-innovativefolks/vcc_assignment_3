@@ -1,5 +1,27 @@
 # All Execution Steps
 
+## 2a. Alternative: Docker Compose (Apple Silicon / no VirtualBox)
+
+If `vagrant up` fails (for example **Apple Silicon** with an **amd64-only** VirtualBox box, or **Vagrant** blocked on the **Downloads** folder), run the same services with Docker:
+
+```bash
+cd vcc_assignment_3
+docker compose up -d
+```
+
+- Flask: [http://localhost:5000](http://localhost:5000)  
+- Prometheus: [http://localhost:9090](http://localhost:9090)  
+- Grafana: [http://localhost:3000](http://localhost:3000) (admin/admin)  
+- Node exporter metrics: [http://localhost:9100/metrics](http://localhost:9100/metrics)
+
+Stop with: `docker compose down`.
+
+On macOS, if port **5000** is used by **AirPlay Receiver**, change the app port mapping in `docker-compose.yml` (e.g. `5001:5000`) or turn off AirPlay in **System Settings → AirDrop & Handoff**.
+
+AWS CLI, Terraform, and `terraform.tfvars` can be configured on your **host**; you do not need the VM for those steps.
+
+---
+
 ## 1. Initialize Git Repository
 ```bash
 cd vcc_assignment_3

@@ -6,7 +6,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TERRAFORM_DIR="${SCRIPT_DIR}/../terraform"
-LOG_FILE="/var/log/scale_down.log"
+mkdir -p "${SCRIPT_DIR}/../logs"
+LOG_FILE="${SCALE_DOWN_LOG:-${SCRIPT_DIR}/../logs/scale_down.log}"
 
 AWS_REGION="${AWS_REGION:-us-east-1}"
 INSTANCE_NAME="${INSTANCE_NAME:-vcc-scaled-instance}"

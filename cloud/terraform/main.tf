@@ -91,11 +91,19 @@ resource "aws_instance" "app_server" {
     volume_type = "gp3"
   }
 
+  # Bootstrap Flask from the public GitHub repo (same flow as manual deploy).
   user_data = <<-SCRIPT
     #!/bin/bash
+    set -e
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update -y
-    apt-get install -y python3 python3-pip python3-venv curl
-    echo "Instance ready for application deployment"
+    apt-get install -y python3 python3-pip python3-venv git curl
+    cd /opt
+    rm -rf vcc_assignment_3
+    git clone --depth 1 https://github.com/chandan-innovativefolks/vcc_assignment_3.git
+    cd vcc_assignment_3/app
+    pip3 install --no-cache-dir -r requirements.txt
+    nohup python3 app.py > /var/log/vcc-flask.log 2>&1 &
   SCRIPT
 
   tags = {
