@@ -10,7 +10,11 @@ import threading
 
 from flask import Flask, jsonify, render_template_string
 from prometheus_client import (
-Counter, Gauge, Histogram, generate_latest, CONTENT_TYPE_LATEST
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+    CONTENT_TYPE_LATEST,
 )
 import psutil
 
@@ -104,11 +108,11 @@ scaling_status = "Normal"
 
 
 def update_metrics():
-"""Background thread to continuously update Prometheus gauges."""
-while True:
-CPU_USAGE.set(psutil.cpu_percent(interval=1))
-MEMORY_USAGE.set(psutil.virtual_memory().percent)
-time.sleep(5)
+    """Background thread to continuously update Prometheus gauges."""
+    while True:
+        CPU_USAGE.set(psutil.cpu_percent(interval=1))
+        MEMORY_USAGE.set(psutil.virtual_memory().percent)
+        time.sleep(5)
 
 
 metrics_thread = threading.Thread(target=update_metrics, daemon=True)
@@ -117,65 +121,67 @@ metrics_thread.start()
 
 @app.route("/")
 def index():
-REQUEST_COUNT.labels(method="GET", endpoint="/").inc()
-return render_template_string(HTML_TEMPLATE)
+    REQUEST_COUNT.labels(method="GET", endpoint="/").inc()
+    return render_template_string(HTML_TEMPLATE)
 
 
 @app.route("/api/status")
 def status():
-REQUEST_COUNT.labels(method="GET", endpoint="/api/status").inc()
-cpu = psutil.cpu_percent(interval=0.5)
-mem = psutil.virtual_memory().percent
-disk = psutil.disk_usage("/").percent
-return jsonify({
-"cpu": cpu,
-"memory": mem,
-"disk": disk,
-"scaling_status": scaling_status,
-"threshold": 75.0,
-"hostname": os.uname().nodename,
-})
+    REQUEST_COUNT.labels(method="GET", endpoint="/api/status").inc()
+    cpu = psutil.cpu_percent(interval=0.5)
+    mem = psutil.virtual_memory().percent
+    disk = psutil.disk_usage("/").percent
+    return jsonify({
+        "cpu": cpu,
+        "memory": mem,
+        "disk": disk,
+        "scaling_status": scaling_status,
+        "threshold": 75.0,
+        "hostname": os.uname().nodename,
+    })
 
 
 @app.route("/api/load/<level>", methods=["POST"])
 def generate_load(level):
-"""Generate artificial CPU load to trigger auto-scaling."""
-REQUEST_COUNT.labels(method="POST", endpoint="/api/load").inc()
+    """Generate artificial CPU load to trigger auto-scaling."""
+    REQUEST_COUNT.labels(method="POST", endpoint="/api/load").inc()
 
-if level == "light":
-duration, workers = 10, 1
-elif level == "heavy":
-duration, workers = 30, 4
-else:
-return jsonify({"error": "Invalid level. Use 'light' or 'heavy'."}), 400
+    if level == "light":
+        duration, workers = 10, 1
+    elif level == "heavy":
+        duration, workers = 30, 4
+    else:
+        return jsonify({"error": "Invalid level. Use 'light' or 'heavy'."}), 400
 
-def cpu_burn(seconds):
-end = time.time() + seconds
-while time.time() < end:
-hashlib.sha256(os.urandom(128)).hexdigest()
+    def cpu_burn(seconds):
+        end = time.time() + seconds
+        while time.time() < end:
+            hashlib.sha256(os.urandom(128)).hexdigest()
 
-ACTIVE_THREADS.set(workers)
-for _ in range(workers):
-t = threading.Thread(target=cpu_burn, args=(duration,))
-t.daemon = True
-t.start()
+    ACTIVE_THREADS.set(workers)
+    for _ in range(workers):
+        t = threading.Thread(target=cpu_burn, args=(duration,))
+        t.daemon = True
+        t.start()
 
-return jsonify({
-"message": f"Started {level} load: {workers} workers for {duration}s",
-"workers": workers,
-"duration_seconds": duration,
-})
+    return jsonify({
+        "message": f"Started {level} load: {workers} workers for {duration}s",
+        "workers": workers,
+        "duration_seconds": duration,
+    })
 
 
 @app.route("/metrics")
 def metrics():
-return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
+    return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
 
 
 @app.route("/health")
 def health():
-return jsonify({"status": "healthy"})
+    return jsonify({"status": "healthy"})
 
 
 if __name__ == "__main__":
-app.run(host="0.0.0.0", port=5000, debug=True)
+    # Default 5000; override with FLASK_RUN_PORT if 5000 is taken (e.g. macOS AirPlay).
+    port = int(os.environ.get("FLASK_RUN_PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, debug=True)

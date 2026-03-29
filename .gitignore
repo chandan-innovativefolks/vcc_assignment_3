@@ -13,7 +13,6 @@ build/
 *.tfstate.backup
 *.tfvars
 !terraform.tfvars.example
-.terraform.lock.hcl
 
 # Vagrant
 .vagrant/
