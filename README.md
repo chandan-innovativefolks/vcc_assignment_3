@@ -400,6 +400,7 @@ curl http://INSTANCE_IP:5000/api/status
 ```
 vcc_assignment_3/
 ├── Vagrantfile # VM definition (VirtualBox)
+├── run.sh # script to run create entire infra
 ├── provision.sh # VM setup script
 ├── docker-compose.monitoring.yml # Prometheus + Grafana stack
 ├── app/
@@ -463,15 +464,5 @@ vcc_assignment_3/
 | 9090 | Prometheus |
 | 3000 | Grafana |
 | 9100 | Node Exporter |
-
----
-
-## Plagiarism Declaration
-
-I hereby declare that this implementation, documentation, and all associated code are my own original work. No part of this submission has been copied, plagiarized, or directly reproduced from any external source without proper attribution. All tools, libraries, and frameworks used are open-source and properly referenced.
-
-**Student Name:** __C_________________
-**Date:** ___________________
-**Signature:** ___________________
 
 ---
